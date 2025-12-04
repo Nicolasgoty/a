@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogos</title>
+    <link rel="stylesheet" href="jogos.css">
+</head>
+
+<body>
+<header>
+    <h2>Interclasse CELC</h2>
+</header>
+
+<main>
+    <h1>Jogos</h1>
+    <div id="listaJogos"></div>
+</main>
+
+<script>
+function carregarJogos() {
+    return JSON.parse(localStorage.getItem("jogos")) || [];
+}
+
+function render() {
+    const jogos = carregarJogos();
+    const div = document.getElementById("listaJogos");
+
+    if (jogos.length === 0) {
+        div.innerHTML = "<p>Nenhum jogo disponível.</p>";
+        return;
+    }
+
+    div.innerHTML = "";
+
+    jogos.forEach(jogo => {
+        const box = document.createElement("div");
+        box.style = "border:1px solid #ccc;padding:10px;margin:10px 0;";
+
+        box.innerHTML = `
+            <h3>${jogo.timeA} vs ${jogo.timeB}</h3>
+            <p>Placar: <strong>${jogo.placarA} x ${jogo.placarB}</strong></p>
+            <button onclick="location.href='visualizar-jogo.html?id=${jogo.id}'">👁 Acompanhar</button>
+        `;
+
+        div.appendChild(box);
+    });
+}
+
+render();
+</script>
+
+</body>
+</html>

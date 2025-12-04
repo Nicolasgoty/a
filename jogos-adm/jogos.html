@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gerenciar Jogos</title>
+  <link rel="stylesheet" href="jogos.css">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 18px; }
+    .box { border:1px solid #ccc; padding:12px; margin:12px 0; border-radius:8px; background:#fafafa;}
+    .acoes button { margin-right:8px; }
+  </style>
+</head>
+<body>
+  <header><h2>Interclasse CELC — Admin</h2></header>
+  <main>
+    <h1>Jogos Ativos</h1>
+    <button id="btnCriar" style="padding:8px 12px">➕ Criar Novo Jogo</button>
+    <div id="listaJogos" style="margin-top:20px"></div>
+  </main>
+
+  <script>
+    // helpers
+    function carregarJogos(){ return JSON.parse(localStorage.getItem("jogos")) || []; }
+    function salvarJogos(jogos){ localStorage.setItem("jogos", JSON.stringify(jogos)); }
+
+    // criar novo e abrir editor
+    document.getElementById("btnCriar").addEventListener("click", () => {
+      const jogos = carregarJogos();
+      const novo = {
+        id: Date.now(),
+        timeA: "Time A",
+        timeB: "Time B",
+        placarA: 0,
+        placarB: 0,
+        gols: [],
+        status: "parado",       // "parado" | "rodando" | "finalizado" | "pausado"
+        cronometro: { segundos: 0 }
+      };
+      jogos.push(novo);
+      salvarJogos(jogos);
+      // abrir editor do novo jogo
+      window.location.href = "controle-jogo.html?id=" + novo.id;
+    });
+
+    // renderizar lista
+    function renderizarLista(){
+      const container = document.getElementById("listaJogos");
+      const jogos = carregarJogos();
+      container.innerHTML = "";
+
+      if (jogos.length === 0){
+        container.innerHTML = "<p>Nenhum jogo criado ainda.</p>";
+        return;
+      }
+
+      jogos.forEach(j => {
+        const div = document.createElement("div");
+        div.className = "box";
+        div.innerHTML = `
+          <h3>${escapeHtml(j.timeA)} vs ${escapeHtml(j.timeB)}</h3>
+          <p>Placar: <strong>${j.placarA} x ${j.placarB}</strong></p>
+          <p>Status: ${j.status} — Tempo: ${formatTempo(j.cronometro.segundos)}</p>
+          <div class="acoes">
+            <button data-id="${j.id}" class="gerenciar">⚙ Gerenciar</button>
+            <button data-id="${j.id}" class="visualizar">👁 Visualizar</button>
+            <button data-id="${j.id}" class="excluir" style="background:#d9534f;color:#fff;border:none;padding:6px 10px;border-radius:6px;">🗑 Excluir</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // event delegation: gerenciar / visualizar / excluir
+    document.getElementById("listaJogos").addEventListener("click", (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (btn.classList.contains("gerenciar")){
+        window.location.href = "controle-jogo.html?id=" + id;
+      } else if (btn.classList.contains("visualizar")){
+        window.location.href = "visualizar-jogo.html?id=" + id;
+      } else if (btn.classList.contains("excluir")){
+        if (!confirm("Excluir este jogo?")) return;
+        let jogos = carregarJogos();
+        jogos = jogos.filter(j => String(j.id) !== String(id));
+        salvarJogos(jogos);
+        renderizarLista();
+      }
+    });
+
+    // small helpers
+    function formatTempo(segundos){
+      const m = Math.floor(segundos/60); const s = segundos % 60;
+      return String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+    }
+    // basic HTML escape
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // iniciar
+    renderizarLista();
+  </script>
+</body>
+</html>
